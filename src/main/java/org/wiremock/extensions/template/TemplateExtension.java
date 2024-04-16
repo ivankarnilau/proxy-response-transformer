@@ -19,7 +19,8 @@ import com.github.tomakehurst.wiremock.extension.Extension;
 import com.github.tomakehurst.wiremock.extension.ExtensionFactory;
 import com.github.tomakehurst.wiremock.extension.WireMockServices;
 import com.github.tomakehurst.wiremock.extension.responsetemplating.TemplateEngine;
-import org.wiremock.extensions.template.extensions.RequestMatcher;
+import com.github.tomakehurst.wiremock.matching.RequestMatcher;
+import org.wiremock.extensions.template.extensions.StubResponseTransformerWithParams;
 
 import java.util.Collections;
 import java.util.List;
@@ -32,18 +33,17 @@ import java.util.List;
  */
 public class TemplateExtension implements ExtensionFactory {
 
-    // TODO: Add the extensions, event listeners, request matchers and everything else needed for this extension.
-    private final RequestMatcher requestMatcher;
+    private final StubResponseTransformerWithParams stubResponseTransformerWithParams;
 
     public TemplateExtension() {
         var templateEngine = new TemplateEngine(Collections.emptyMap(), null, Collections.emptySet(), false);
-        this.requestMatcher = new RequestMatcher(templateEngine);
+        this.stubResponseTransformerWithParams = new StubResponseTransformerWithParams();
     }
 
     @Override
     public List<Extension> create(WireMockServices services) {
         return List.of(
-            requestMatcher
+            stubResponseTransformerWithParams
         );
     }
 }
