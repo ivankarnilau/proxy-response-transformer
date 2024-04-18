@@ -2,13 +2,17 @@ package org.wiremock.extensions.template.extensions;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.github.tomakehurst.wiremock.extension.Parameters;
 import com.github.tomakehurst.wiremock.extension.ResponseTransformerV2;
+import com.github.tomakehurst.wiremock.http.HttpHeader;
+import com.github.tomakehurst.wiremock.http.HttpHeaders;
 import com.github.tomakehurst.wiremock.http.Response;
 import com.github.tomakehurst.wiremock.stubbing.ServeEvent;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class StubResponseTransformerWithParams implements ResponseTransformerV2 {
 
@@ -19,8 +23,15 @@ public class StubResponseTransformerWithParams implements ResponseTransformerV2 
         for (Map.Entry<String, Object> a : parameters.entrySet()) {
             body = updateJSONValue(body, a.getKey(), a.getValue());
         }
+
         return Response.Builder.like(response)
-            .but().body(body)
+            .but()
+            .headers(new HttpHeaders(response.getHeaders().all().stream().filter(item -> !item.key().equals("Content-Length")).collect(Collectors.toList()))
+                .plus(
+                    new HttpHeader("Content-Length", Integer.toString(body.length))
+                )
+            )
+            .body(body)
             .build();
     }
 
@@ -48,7 +59,13 @@ public class StubResponseTransformerWithParams implements ResponseTransformerV2 
 
     private static void updateJsonNode(JsonNode jsonNode, String[] pathComponents, Object newValue, int index) {
         if (index == pathComponents.length - 1) {
-            ((com.fasterxml.jackson.databind.node.ObjectNode) jsonNode).put(pathComponents[index], String.valueOf(newValue));
+            if (newValue instanceof Boolean) {
+                ((ObjectNode) jsonNode).put(pathComponents[index], (Boolean) newValue);
+            } else if (newValue instanceof Integer) {
+                ((ObjectNode) jsonNode).put(pathComponents[index], (Integer) newValue);
+            } else if (newValue instanceof String) {
+                ((ObjectNode) jsonNode).put(pathComponents[index], (String) newValue);
+            }
         } else {
             String currentPathComponent = pathComponents[index];
             if (currentPathComponent.equals("*")) {

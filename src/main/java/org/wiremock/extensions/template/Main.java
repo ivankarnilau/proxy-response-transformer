@@ -10,9 +10,9 @@ public class Main {
     public static void main(String[] args) {
         WireMockServer wireMockServer = new WireMockServer(
             options()
-                .port(8089)
+                .port(8078)
                 .extensions(new StubResponseTransformerWithParams())
-                );
+        );
         wireMockServer.start();
     }
 }
